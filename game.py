@@ -72,22 +72,46 @@ class Game:
         for i, card_tuple in enumerate(cards_played):
             card, player_num = card_tuple
             card.draw_card(rot=rotate_dict[player_num])
+            if player_num in [0,2]:
+                card_width = card.card_surf.get_width()
+                card_height = card.card_surf.get_height()
+            else:
+                card_height = card.card_surf.get_width()
+                card_width = card.card_surf.get_height()
+            # if player_num == 0:
+            #     x = screen_width // 2 - card_spacing 
+            #     y = screen_height - card.card_surf.get_height() * 2.5 - screen_height//6.5  # 50 is a margin from the bottom
+            #     self.display_surface.blit(card.card_surf, (x, y))
+            # elif player_num == 1:
+            #     x = screen_width - card.card_surf.get_width() * 2.5 - screen_width//4.5  # 50 is a margin from the right
+            #     y = screen_height // 2 - card_spacing
+            #     self.display_surface.blit(card.card_surf, (x, y))
+            # elif player_num == 2:
+            #     x = screen_width // 2 - card_spacing
+            #     y = card.card_surf.get_height() * 2.5   # 50 is a margin from the top
+            #     self.display_surface.blit(card.card_surf, (x, y))
+            # else:
+            #     x = card.card_surf.get_width() * 2.5 + 50  # 50 is a margin from the left
+            #     y = screen_height // 2 - card_spacing
+            #     self.display_surface.blit(card.card_surf, (x, y))
+
             if player_num == 0:
-                x = screen_width // 2 - card_spacing 
-                y = screen_height - card.card_surf.get_height() * 2.5 - screen_height//7  # 50 is a margin from the bottom
+                x = screen_width // 2 - card_width//2  #- card_width - card_height 
+                y = screen_height//2 + card_width//2  # 50 is a margin from the bottom
                 self.display_surface.blit(card.card_surf, (x, y))
             elif player_num == 1:
-                x = screen_width - card.card_surf.get_width() * 2.5 - screen_width//5  # 50 is a margin from the right
-                y = screen_height // 2 - card_spacing
+                x = screen_width//2 + card_width//2 # 50 is a margin from the right
+                y = screen_height // 2 - card_width//2
                 self.display_surface.blit(card.card_surf, (x, y))
             elif player_num == 2:
-                x = screen_width // 2 - card_spacing
-                y = card.card_surf.get_height() * 2.5 + 50  # 50 is a margin from the top
+                x = screen_width // 2 - card_width//2 
+                y = screen_height//2 - card_height - card_width//2  # 50 is a margin from the top
                 self.display_surface.blit(card.card_surf, (x, y))
             else:
-                x = card.card_surf.get_width() * 2.5 + 50  # 50 is a margin from the left
-                y = screen_height // 2 - card_spacing
+                x = screen_width//2 - card_height -  card_width//2   # 50 is a margin from the left
+                y = screen_height // 2 - card_width//2
                 self.display_surface.blit(card.card_surf, (x, y))
+            
 
     def convert_cards(self, hands, rounds):
         """
