@@ -1,4 +1,7 @@
-from cards import Card, card_suits, card_values
+from card_wrapper import CardWrapper
+import time
+from sun_logic.card import *
+from sun_logic.sun import *
 from player import Player
 import random
 import pygame
@@ -12,20 +15,15 @@ class Game:
         self.screen = pygame.display.set_mode((WIDTH, HEIGHT))
         pygame.display.set_caption(TITLE_STRING)
         self.players = [Player(player_num=i) for i in range(4)] # Create all four players
-        self.deck = self.generate_deck() 
-        self.played_cards = []
-        self.deal_hands()
-        self.current_player_index = random.randint(0,3)
-        self.rounds_played=[]
+        self.game_ended=False
         self.display_surface = pygame.display.get_surface()
+        self.font = pygame.font.Font(GAME_FONT, 36)
 
     def render_cards(self):
         card_spacing = 100  # Adjust this value to control the spacing between cards
-
-
         screen_width = WIDTH
         screen_height = HEIGHT
-        card_spacing = 100  # Adjust this value to control the spacing between cards
+        card_spacing = 75  # Adjust this value to control the spacing between cards
 
         for player in self.players:
             counter = 0
@@ -35,6 +33,7 @@ class Game:
                 for card in player.hand:
                     x = screen_width // 2 - (len(player.hand) * card_spacing) // 2 + counter * card_spacing
                     y = screen_height - card.card_surf.get_height() - 50  # 50 is a margin from the bottom
+                    card.save_position((x, y))
                     self.display_surface.blit(card.card_surf, (x, y))
                     counter += 1
 
@@ -63,111 +62,134 @@ class Game:
                     counter += 1
 
 
-
-    def generate_deck(self):
-        deck = []
-        for suit in card_suits:
-            for value in card_values:
-                deck.append(Card(value, suit))
-        random.shuffle(deck)
-        return deck
+    def render_played_card(self, cards_played: list):
+        card_pos = [-112.5, -37.5, 37.5, 112.5]
+        center_width = WIDTH/2
+        center_height = HEIGHT/2
+        for i, card in enumerate(cards_played):
+            card.draw_card(rot=0)
+            self.display_surface.blit(card.card_surf, (center_width + card_pos[i] - 32, center_height - 44.5))
     
-    def deal_hands(self):
-        hands = [self.deck[:8], self.deck[8:16], self.deck[16:24], self.deck[24:32]]
+
+    def convert_cards(self, hands, rounds):
+        """
+        Converts cards data class to our card class and ensures the same object is referenced in both hands and rounds.
+        """
+        card_map = {}  # Map to store the mapping from original card to CardWrapper
+        
+        # Convert hands and store the mapping
+        for hand in hands:
+            for i in range(len(hand)):
+                original_card = hand[i]
+                if original_card not in card_map:
+                    card_map[original_card] = CardWrapper(original_card.rank, original_card.suit)
+                hand[i] = card_map[original_card]
+
+        # Convert rounds using the same mapping
+        for round in rounds:
+            for i in range(len(round)):
+                original_card = round[i]
+                round[i] = card_map[original_card]
+
+    
+    def deal_hands(self, hands: list):
+        """
+        Deals the hand to each player
+        """
         for player, hand in zip(self.players, hands):
             player.give_hand(hand)
-        print(self.players[0].print_cards())
 
 
-    
-    def player_turn(self, card_idx):
-        '''
-        players[current_player_index]
-        1st play the card add it to played cards
-        2nd choose the card (basically pop it out)
-        3rd update the current player index
-
-        Find whose turn it is
-        card_played = True / False
-
-        '''
-        player = self.players[self.current_player_index]
-        card = player.cards[card_idx]
-        self.played_cards.apppend(card)
-        player.choose_card(card)    
-        # if len(self.played_cards) % 4 == 0:
-        #     self.rounds_played.append(self.played_cards)
-        #     self.played_cards = []
-
-        
-        pass
-
-    
-
-    def run(self):
+    def render_scores(self, scores):
         """
-        [
-        begining_hand_of_all_players,
-        cards_played,
-        scores
-        ]
-        
-        [current_player, hand_of_all_players, card_played, round_ended, game_ended, team_1_score, team_2_score, ]
-        Current_player: index (0-3)[] (int)
-        hand_of_all_players: list_of_cards [] #(it should be disscused with SAID BOWSER)#
-        card_played: card index (int)
-        round_ended: boolean flag (bool)
-        game_ended: boolean flag (bool)
-        team_1_score: (int)
-        team_2_score: (int)
-
-        [
-        [AH, 8H, 7H, 10H]
-        ]
+        Renders the scores for Team 1 and Team 2 at the top right of the screen.
         """
-        # rounds = [0, 10, 12, '9H', 'AH', 'KH', '10H']
-        # pygame.init()
-        # pygame.display.set_caption('San!')
+        team1_score_text = f"Team 1:{'':>1} {scores[0]:>4}"
+        team2_score_text = f"Team 2: {scores[1]:>4}"
 
-        # for round in rounds:
-        while True:
+        # Render the text
+        team1_score_surface = self.font.render(team1_score_text, True, (255, 255, 255))  # White color
+        team2_score_surface = self.font.render(team2_score_text, True, (255, 255, 255))
+
+        # Calculate positions
+        screen_width = WIDTH
+        margin = 20  # Margin from the top and right edges
+        team1_pos = (screen_width - team1_score_surface.get_width() - margin, margin)
+        team2_pos = (screen_width - team2_score_surface.get_width() - margin, margin + team1_score_surface.get_height())
+
+        # Blit the text surfaces onto the screen
+        self.display_surface.blit(team1_score_surface, team1_pos)
+        self.display_surface.blit(team2_score_surface, team2_pos)
+
+
+
+    def run(self, game_info: dict):
+        """
+        game_info (dict): Contains all information about how the game was played
+        game_info.rounds (list of lists): Every card played per round in chronological order
+        game_info.player (list): Player who starts the round
+        game_info.player_hands (list of lists): List containing initial hands of all players
+        """
+
+        current_score = [0, 0]
+        self.convert_cards(game_info['player_hands'], game_info['rounds'])
+        self.deal_hands(game_info['player_hands'])
+
+        clock = pygame.time.Clock()
+        delay_ms = 1000  # Delay in milliseconds (1000 ms = 1 second)
+        
+        running = True
+        while running:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    # print('are we here?')
+                    running = False
                     pygame.quit()
                     sys.exit()
 
-            # for cards_played in round:
-                
-            pygame.display.update()
-            self.screen.fill(BG_COLOR)
+            self.screen.fill(BG_COLOR)  # Clear screen with background color
             self.render_cards()
+            self.render_scores(current_score)
+            pygame.display.update()  # Update the full display Surface to the screen
+            clock.tick(1)
+            if not self.game_ended:
+                for round, current_player_idx, score in zip(game_info['rounds'], game_info['players'], game_info['scores']):
+                    cards_played = []  # Cards that are played per round
+                    for card in round:
+                        player = self.players[current_player_idx]
 
-        #     # Check if all 8 rounds were completed
-        #     if self.round_ended:
-        #         """
-        #         1. Animation that round ended.
-        #         2. Remove all cards from board
-        #         3. Update Score
-        #         """
-        #         pass
-        #     if self.game_ended:
-        #         """
-        #         1. Animation showing team won and final score
-        #         2. Close game
-        #         """
-        #         break
-            
-        #     """
-        #     1. Find what card is played
-        #     2. Transfer card from hand to board
-        #     """
+                        # Checks if card exists in the current player's hand
+                        if card not in player.hand:
+                            raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
 
+                        player.played_card(card)
+                        cards_played.append(card)
 
-        #     # self.player_turn(card_idx=5)
-        #     self.current_player_index = (self.current_player_index + 1) % 4 
+                        self.screen.fill(BG_COLOR)  # Clear screen with background color
+                        self.render_played_card(cards_played)
+                        self.render_cards()
+                        self.render_scores(current_score)
+                        pygame.display.update()
+
+                        current_player_idx = (current_player_idx + 1) % 4
+
+                        clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
+                        player.print_cards()
+                        print()
+                    current_score = score
+                    # self.render_scores(score)
+
+                self.game_ended = True
+
+            clock.tick(60)  # Cap the frame rate at 60 FPS
 
 if __name__ == '__main__':
     game = Game()
-    
-    game.run()
+    sun_game = Sun()
+    game_info = {
+        'rounds': [[sun_game.player_hands[j][i] for j in range(4)] for i in range(8)], # Cards that were played.
+        'players': [0] * 8,
+        'player_hands': sun_game.player_hands, # The intial hands that were dealth.
+        'scores': [[1*i, 2*i] for i in range(1, 9)]
+    }
+    game.run(game_info)
+
