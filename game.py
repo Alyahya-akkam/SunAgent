@@ -74,10 +74,10 @@ class Game:
             card.draw_card(rot=rotate_dict[player_num])
             if player_num == 0:
                 x = screen_width // 2 - card_spacing 
-                y = screen_height - card.card_surf.get_height() * 2.5 - screen_width//4  # 50 is a margin from the bottom
+                y = screen_height - card.card_surf.get_height() * 2.5 - screen_height//7  # 50 is a margin from the bottom
                 self.display_surface.blit(card.card_surf, (x, y))
             elif player_num == 1:
-                x = screen_width - card.card_surf.get_width() * 2.5 - screen_width//2.5  # 50 is a margin from the right
+                x = screen_width - card.card_surf.get_width() * 2.5 - screen_width//5  # 50 is a margin from the right
                 y = screen_height // 2 - card_spacing
                 self.display_surface.blit(card.card_surf, (x, y))
             elif player_num == 2:
