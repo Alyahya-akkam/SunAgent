@@ -2,7 +2,7 @@ from card_wrapper import CardWrapper
 import time
 from sun_logic.card import *
 from sun_logic.sun import *
-from player import Player
+from player import Player, rotate_dict
 import random
 import pygame
 import sys
@@ -64,12 +64,30 @@ class Game:
 
     def render_played_card(self, cards_played: list):
         card_pos = [-112.5, -37.5, 37.5, 112.5]
+        card_spacing = 50
         center_width = WIDTH/2
         center_height = HEIGHT/2
-        for i, card in enumerate(cards_played):
-            card.draw_card(rot=0)
-            self.display_surface.blit(card.card_surf, (center_width + card_pos[i] - 32, center_height - 44.5))
-    
+        screen_width = WIDTH
+        screen_height = HEIGHT
+        for i, card_tuple in enumerate(cards_played):
+            card, player_num = card_tuple
+            card.draw_card(rot=rotate_dict[player_num])
+            if player_num == 0:
+                x = screen_width // 2 - card_spacing 
+                y = screen_height - card.card_surf.get_height() * 2.5 - screen_width//4  # 50 is a margin from the bottom
+                self.display_surface.blit(card.card_surf, (x, y))
+            elif player_num == 1:
+                x = screen_width - card.card_surf.get_width() * 2.5 - screen_width//2.5  # 50 is a margin from the right
+                y = screen_height // 2 - card_spacing
+                self.display_surface.blit(card.card_surf, (x, y))
+            elif player_num == 2:
+                x = screen_width // 2 - card_spacing
+                y = card.card_surf.get_height() * 2.5 + 50  # 50 is a margin from the top
+                self.display_surface.blit(card.card_surf, (x, y))
+            else:
+                x = card.card_surf.get_width() * 2.5 + 50  # 50 is a margin from the left
+                y = screen_height // 2 - card_spacing
+                self.display_surface.blit(card.card_surf, (x, y))
 
     def convert_cards(self, hands, rounds):
         """
@@ -162,7 +180,7 @@ class Game:
                             raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
 
                         player.played_card(card)
-                        cards_played.append(card)
+                        cards_played.append((card, current_player_idx))
 
                         self.screen.fill(BG_COLOR)  # Clear screen with background color
                         self.render_played_card(cards_played)
@@ -177,7 +195,7 @@ class Game:
                         print()
                     current_score = score
                     # self.render_scores(score)
-
+                    pygame.event.pump()
                 self.game_ended = True
 
             clock.tick(60)  # Cap the frame rate at 60 FPS
