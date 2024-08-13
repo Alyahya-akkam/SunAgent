@@ -98,7 +98,8 @@ class Sun:
         Returns: ID of the next_player. (You can use this or ignore it up to you.)
         """
         if card not in self.player_hands[self.next_player]:
-            raise ValueError(f"Player {self.next_player}, who was expeceted to play, they do not have the card {card}.")
+            print(self.player_hands[self.next_player])
+            raise ValueError(f"Player {self.next_player}, who was expected to play, they do not have the card {card}.")
         
         self.player_hands[self.next_player].remove(card)
         self.cards_played.append(card)

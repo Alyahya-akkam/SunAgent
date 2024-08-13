@@ -12,7 +12,9 @@ class CardWrapper:
     card_value (str): Represents the value of the card. E.g: ('Q': Queen)
     card_suite (str): Represents the suite of the card. E.g: Heart
     """
-    def __init__(self, card_value, card_suit):
+    def __init__(self, rank, suit):
+        self.rank = rank
+        self.suit = suit
         self.animation_start_time = pygame.time.get_ticks()
         self.animation_complete = False
         self.uuid = None
@@ -23,7 +25,7 @@ class CardWrapper:
         self.card_img = None
         self.card_bounding_rect = None
         self.card_surf = None
-        self.data = CardTuple(card_value, card_suit)
+        self.data = CardTuple(rank, suit)
         self.id = f"{self.data.value}{self.data.suit}"
         self.img = f"./graphics/cards/{self.id}.png"
 
@@ -50,4 +52,7 @@ class CardWrapper:
         if isinstance(other, CardWrapper):
             return self.id == other.id
         return False
+    
+    def __hash__(self):
+        return hash((self.rank, self.suit))
 
