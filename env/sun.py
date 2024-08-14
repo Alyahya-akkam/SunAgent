@@ -1,4 +1,4 @@
-from sun_logic.card import Card, ranks, suits
+from card import Card, ranks, suits
 import random
 # from typing import List, Tuple
 

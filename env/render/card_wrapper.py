@@ -1,8 +1,12 @@
+import sys, os
+sys.path.append((os.path.dirname(os.path.abspath('env/card.py'))))
+
 from collections import namedtuple
-from sun_logic.card import ranks, suits
+from card import *
 from settings import *
 import pygame, random
 CardTuple = namedtuple('Card', ['value', 'suit'])
+
 
 
 class CardWrapper:

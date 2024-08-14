@@ -1,12 +1,13 @@
 from card_wrapper import *
-from sun_logic.card import *
-from sun_logic.sun import *
+from card import *
+from sun import *
 from player import *
-import random
-import pygame
-import sys
+import pygame, sys, random, os
 from settings import *
-class Game:
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('card'))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('sun'))))
+
+class Render:
   
 
     def __init__(self) -> None:
@@ -307,7 +308,7 @@ class Game:
 
 
 if __name__ == '__main__':
-    game = Game()
+    game = Render()
     sun_game = Sun()
     game_info = {
         'rounds': [[sun_game.player_hands[j][i] for j in range(4)] for i in range(8)], # Cards that were played.
