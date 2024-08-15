@@ -74,7 +74,7 @@ class Sun:
             
         # if this was the last round, add 10 to the round points.
         # (it's baloot rules, the last round has 10 extra points)
-        if self.rounds_played == 8:
+        if self.game_ended():
             round_points += 10
         
         # update score
@@ -88,6 +88,9 @@ class Sun:
 
         # clear cards_played
         self.cards_played.clear()
+
+    def game_ended(self) -> bool:
+        return self.rounds_played == 8
 
     def play(self, card: Card) -> int:
         """
