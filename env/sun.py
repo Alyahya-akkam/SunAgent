@@ -15,9 +15,9 @@ class Sun:
     # NOTE: currently the user has to start a new game if the rounds are over, playing after rounds are done will raise an error.
 
     # this feels weird, i think it's actually fine, still feels weird
-    def __init__(self) -> None:
+    def __init__(self, seed: int | None =None) -> None:
         """Creates the object and sets-up a new game."""
-        self.new_game()
+        self.new_game(seed)
 
     def new_game(self, seed: int | None =None) -> None:
         """
