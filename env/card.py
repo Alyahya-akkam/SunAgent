@@ -38,6 +38,9 @@ class Card:
     # just a way to print cards out for easy debug, don't expect to actually use this for anything
     def __str__(self) -> str:
         return self.rank + "_" + self.suit
+    
+    def __repr__(self) -> str:
+        return self.rank + "_" + self.suit
 
     def __hash__(self):
         return hash((self.rank, self.suit))
