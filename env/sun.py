@@ -97,6 +97,7 @@ class Sun:
 
         Returns: ID of the next_player. (You can use this or ignore it up to you.)
         """
+        # shouldn't be needed since possible_moves() was added, left as a sanity check
         if card not in self.player_hands[self.next_player]:
             print(self.player_hands[self.next_player])
             raise ValueError(f"Player {self.next_player}, who was expected to play, they do not have the card {card}.")
@@ -111,3 +112,19 @@ class Sun:
 
         return self.next_player
 
+    def possible_moves(self) -> list[Card]:
+        """Returns `list[Card]` that contains all possible cards `next_player` can legally play."""
+        # if they are the first player in a round, they can play any card
+        if len(self.cards_played) == 0:
+            return self.player_hands[self.next_player]
+        
+        # otherwise, check if next_player has cards that match the suit of the first card played
+        first_suit = self.cards_played[0].suit
+        possible_moves = [card for card in self.player_hands[self.next_player] if card.suit == first_suit]
+
+        # if next_player has any cards that match the suit of the first card played
+        # then these are the card that they can play 
+        if len(possible_moves) > 0:
+            return possible_moves
+        else: # if they don't then they can play any card
+            return self.player_hands[self.next_player]
