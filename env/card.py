@@ -1,9 +1,8 @@
 from dataclasses import dataclass
 from typing import Self
 
-# TODO: what the fuck is T and should I use letters or not?
 ranks = ["7", "8", "9", "10", "J", "Q", "K", "A"]
-suits = ["S", "H", "C", "D"]
+suits = ["C", "D", "H", "S"]
 rank_to_points = {
     "10": 10,
     "J": 2,
