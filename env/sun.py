@@ -10,7 +10,7 @@ class Sun:
     # from now on team 0 (p0 and p2) and team 1 (p1 and p3) will be used
     score: list[int] # team 0, team 1
     next_player: int # indicates which player is expected to play next
-    cards_played: list[Card] # keeps track of cards played this round
+    cards_played: list[tuple[int, Card]] # keeps track of cards played this round and who played each card
     rounds_played: int # keeps track of rounds played so far
     # NOTE: currently the user has to start a new game if the rounds are over, playing after rounds are done will raise an error.
 
@@ -48,7 +48,7 @@ class Sun:
         """Updates `score` and `round_played`, clears `cards_played`, and determines who plays first next round."""
         self.rounds_played += 1
 
-        first_suit = self.cards_played[0].suit
+        first_suit = self.cards_played[0][1].suit
 
         # this is a bit of a mess
         # it just iterates over the cards played, while keeping a pointer to whoever played that card
@@ -58,18 +58,15 @@ class Sun:
         ### START OF MESSY BIT
         # assume first player and first card are strongest
         strong_player = self.next_player # since the round is over, this points to the player who played first
-        strong_card = self.cards_played[0]
+        strong_card = self.cards_played[0][1]
         # points for the round
         round_points = 0
-        # pointer to player who played the card in the loop
-        player_ptr = self.next_player
-        for card in self.cards_played:
+        for player_idx, card in self.cards_played:
             # if the card matches the suit and is the strongest so far
             round_points += card.points
             if card.suit == first_suit and card.points > strong_card.points:
-                strong_player = player_ptr
+                strong_player = player_idx
                 strong_card = card
-            player_ptr = (player_ptr + 1) % 4
         ### END OF MESSY BIT
             
         # if this was the last round, add 10 to the round points.
@@ -106,7 +103,7 @@ class Sun:
             raise ValueError(f"Player {self.next_player}, who was expected to play, they do not have the card {card}.")
         
         self.player_hands[self.next_player].remove(card)
-        self.cards_played.append(card)
+        self.cards_played.append((self.next_player, card))
         self.next_player = (self.next_player + 1) % 4 # if the round is over, this points to the player who played first
 
         # if the round is over, call end_round
@@ -122,7 +119,7 @@ class Sun:
             return self.player_hands[self.next_player]
         
         # otherwise, check if next_player has cards that match the suit of the first card played
-        first_suit = self.cards_played[0].suit
+        first_suit = self.cards_played[0][1].suit
         possible_moves = [card for card in self.player_hands[self.next_player] if card.suit == first_suit]
 
         # if next_player has any cards that match the suit of the first card played
