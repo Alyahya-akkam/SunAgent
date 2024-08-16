@@ -88,6 +88,9 @@ class Sun:
 
     def game_ended(self) -> bool:
         return self.rounds_played == 8
+    
+    def round_ended(self) -> bool:
+        return sel
 
     def play(self, card: Card) -> int:
         """
