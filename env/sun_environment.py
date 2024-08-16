@@ -53,9 +53,10 @@ class SunEnv(AECEnv):
         self.truncations = {agent: False for agent in self.agents}
 
     def observe(self, agent: int) -> dict[str, np.ndarray]:
-        if agent != self.game.next_player:
-            raise NotImplementedError(f"Agent {agent} is observing, while agent {self.game.next_player} is playing next. \
-                                      Observing for the player that's not playing next is not supported yet.")
+        # if agent != self.game.next_player:
+            
+        #     raise NotImplementedError(f"Agent {agent} is observing, while agent {self.game.next_player} is playing next. \
+        #                               Observing for the player that's not playing next is not supported yet.")
 
         observation = np.zeros((4, 32), dtype="int8")
 
@@ -86,6 +87,8 @@ class SunEnv(AECEnv):
             print("Dead-stepping...")
             return self._was_dead_step(action)
         
+        self._cumulative_rewards[self.agent_selection] = 0
+        
         # check if this is the last play of the round
         end_of_round = len(self.game.cards_played) == 3
         
@@ -102,8 +105,10 @@ class SunEnv(AECEnv):
         if end_of_round:
             # award the round-winning team their difference in points
             # the losing team will get a reward of 0
-            self.rewards[0], self.rewards[2] = [self.game.score[0] - prev_score[0]]*2
-            self.rewards[1], self.rewards[3] = [self.game.score[1] - prev_score[1]]*2
+            team_0_score = self.game.score[0] - prev_score[0]
+            team_1_score = self.game.score[1] - prev_score[1]
+            self.rewards[0], self.rewards[2] = team_0_score, team_0_score
+            self.rewards[1], self.rewards[3] = team_1_score, team_1_score
         else: # otherwise, the rewards are 0
             for agent in self.agents:
                 self.rewards[agent] = 0
