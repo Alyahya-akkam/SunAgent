@@ -84,7 +84,7 @@ class Sun:
         self.next_player = strong_player
 
         # clear cards_played
-        self.cards_played.clear()
+        self.cards_played = []
 
     def game_ended(self) -> bool:
         return self.rounds_played == 8
