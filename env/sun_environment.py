@@ -5,8 +5,8 @@ from gymnasium.spaces import Discrete, MultiBinary
 
 import numpy as np
 
-from sun import Sun
-from card import Card, ranks, suits
+from .sun import *
+from .card import *
 
 ROUND_REWARD_COEFF = 0.1
 
@@ -44,7 +44,7 @@ class SunEnv(AECEnv):
 
     def observe(self, agent: int) -> np.ndarray:
         if agent != self.game.next_player:
-            raise NotImplementedError(f"Agent {agent} is observing, while agent {self.game.next_player} is playing next.
+            raise NotImplementedError(f"Agent {agent} is observing, while agent {self.game.next_player} is playing next. \
                                       Observing for the player that's not playing next is not supported yet.")
 
         observation = np.zeros((4, 32))

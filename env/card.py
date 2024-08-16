@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Self
 
 ranks = ["7", "8", "9", "10", "J", "Q", "K", "A"]
 suits = ["C", "D", "H", "S"]

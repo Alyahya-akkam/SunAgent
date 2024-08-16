@@ -1,4 +1,4 @@
-from card import Card, ranks, suits
+from .card import *
 import random
 # from typing import List, Tuple
 
