@@ -43,6 +43,25 @@ class SunEnv(AECEnv):
         self.infos = {agent: {} for agent in self.agents}
 
     def reset(self, seed: int | None = None, options=None) -> None:
+        self.possible_agents = [0, 1, 2, 3]
+        self.agents = [0, 1, 2, 3]
+
+        self.observation_spaces = {
+            agent:Dict(
+                {
+                    "observation":MultiBinary((4, 32)),
+                    "action_mask":MultiBinary((32,))
+                }
+            )
+            for agent in self.agents
+        }
+
+        # which if the 32 cards the agent intends to play
+        self.action_spaces = {agent: Discrete(32) for agent in self.agents}
+
+        # defining stuff to pass tests
+        self.infos = {agent: {} for agent in self.agents}
+
         self.game = Sun(seed)
 
         self.agent_selection = self.game.next_player
@@ -84,7 +103,6 @@ class SunEnv(AECEnv):
             self.terminations[self.agent_selection]
             or self.truncations[self.agent_selection]
         ):
-            print("Dead-stepping...")
             return self._was_dead_step(action)
         
         self._cumulative_rewards[self.agent_selection] = 0
@@ -128,3 +146,6 @@ class SunEnv(AECEnv):
     
     def action_space(self, agent):
         return self.action_spaces[agent]
+    
+    def close(self) -> None:
+        del self.game
