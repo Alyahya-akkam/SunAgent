@@ -1,4 +1,5 @@
 from pettingzoo import AECEnv
+from pettingzoo.utils import BaseWrapper
 
 from gymnasium.spaces import Discrete, MultiBinary, Dict
 
@@ -150,3 +151,49 @@ class SunEnv(AECEnv):
     
     def close(self) -> None:
         del self.game
+
+class HistoryWrapper(BaseWrapper):
+    """
+    Saves the history of a SunEnv game. Useful for rendering.
+
+    `self.history` dict[str, list]: Contains all information about how the game was played:
+        - `self.history.rounds` list[list[Card]]: Every card played per round in chronological order
+        - `self.history.players` list[int]: Player who starts the round
+        - `self.history.player_hands` list[list[Card]]: List containing initial hands of all players
+    """
+    history: dict[str, list]
+    
+    def __init__(self, env: SunEnv):
+        super().__init__(env)
+        self.env = env
+    
+    def reset(self, seed: int | None = None, options=None) -> None:
+        """Resets environment and history dict."""
+        self.env.reset(seed=seed, options=options)
+        
+        self.history = {
+            "player_hands": self.env.game.player_hands,
+            "players": [0],
+            "rounds": []
+        }
+
+    def step(self, action: int) -> None:
+        """
+        Steps the environment, and saves the cards played and the 
+        next player to the history dict."""
+        end_of_round = len(self.game.cards_played) == 3
+        # if this is the last play of the round
+        if end_of_round:
+            # record the 3 cards played in history (before slef.env.game clears it)
+            self.history["rounds"].extend(self.env.game.cards_played)
+            # add the next card played
+            self.history["rounds"].append(idx_to_card[action])
+        
+        # call the original step method
+        self.env.step(action)
+        
+        # if the round ended, add the player who plays next to history["players"]
+        # don't add if rounds played is already 8 (the game is over)
+        if end_of_round and self.env.game.rounds_played < 8:
+            self.history["players"].append(self.agent_selection)
+        
