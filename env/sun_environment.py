@@ -1,5 +1,4 @@
 from pettingzoo import AECEnv
-from pettingzoo.utils import agent_selector
 
 from gymnasium.spaces import Discrete, MultiBinary, Dict
 
