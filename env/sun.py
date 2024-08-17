@@ -1,4 +1,4 @@
-from env.card import Card, suits, ranks
+from .card import Card, suits, ranks
 import random
 
 ### NOTE: DONT FORGET THE 10 POINTS FOR THE أرض!!!!!!!!!!!!!

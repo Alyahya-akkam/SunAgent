@@ -1,7 +1,7 @@
 import pygame, random
 from collections import namedtuple
-from env.card import *
-from env.render.settings import *
+from ..card import *
+from .settings import *
 
 CardTuple = namedtuple('Card', ['value', 'suit'])
 

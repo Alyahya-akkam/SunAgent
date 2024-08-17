@@ -1,9 +1,9 @@
 import pygame, sys, random, os, subprocess
-from env.render.card_wrapper import *
-from env.card import *
-from env.sun import *
-from env.render.player import *
-from env.render.settings import *
+from .card_wrapper import *
+from ..card import *
+from ..sun import *
+from .player import *
+from .settings import *
 
 
 class Render:
