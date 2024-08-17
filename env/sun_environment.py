@@ -16,7 +16,9 @@ card_to_idx: dict[Card, int] = dict(zip(cards, range(32)))
 
 class SunEnv(AECEnv):
     game: Sun
-
+    metadata = {
+        "name": "sun_environment_v0",
+    }
     def __init__(self) -> None:
         super().__init__()
 
