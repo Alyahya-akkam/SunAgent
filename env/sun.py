@@ -1,7 +1,5 @@
-from .card import *
+from env.card import Card, suits, ranks
 import random
-from copy import deepcopy
-# from typing import List, Tuple
 
 ### NOTE: DONT FORGET THE 10 POINTS FOR THE أرض!!!!!!!!!!!!!
 class Sun:   

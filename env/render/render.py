@@ -1,11 +1,10 @@
-from card_wrapper import *
-from card import *
-from sun import *
-from player import *
 import pygame, sys, random, os
-from settings import *
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('card'))))
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath('sun'))))
+from env.render.card_wrapper import *
+from env.card import *
+from env.sun import *
+from env.render.player import *
+from env.render.settings import *
+
 
 class Render:
   
@@ -21,7 +20,7 @@ class Render:
         self.font = pygame.font.Font(GAME_FONT, 36)
         self.card_to_cardwrapper_map = {}  # Map card to card wrapper
         self.cardwrapper_to_card_map = {}
-        self.game_start = True
+        self.game_running = True
 
 
     def render_cards(self) -> None:
@@ -100,6 +99,7 @@ class Render:
                 x = screen_width//2 - card_height -  card_width//2   # 50 is a margin from the left
                 y = screen_height // 2 - card_width//2
                 self.display_surface.blit(card.card_surf, (x, y))
+
 
     def map_cards(self, hand: list[Card]) -> None:
         """
@@ -186,58 +186,45 @@ class Render:
         
 
         clock = pygame.time.Clock()
-        delay_ms = 1000  # Delay in milliseconds (1000 ms = 1 second)
         
-        running = True
-        while running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    pygame.quit()
-                    sys.exit()
+        while self.game_running:
+            self.screen.fill(BG_COLOR)  # Clear screen with background color
+            self.render_cards()
+            self.render_scores(current_score)
+            pygame.display.update()  # Update the full display Surface to the screen
+            clock.tick(1)
+            self.game_start = False
 
 
-            if self.game_start:
-                self.screen.fill(BG_COLOR)  # Clear screen with background color
-                self.render_cards()
-                self.render_scores(current_score)
-                pygame.display.update()  # Update the full display Surface to the screen
-                clock.tick(1)
-                self.game_start = False
+            for round, current_player_idx, score in zip(rounds, start_player_idx, scores):
+                self.wrap_round(round)
+                cards_played = []  # Cards that are played per round
+                for card in round:
+                    player = self.players[current_player_idx]
 
+                    # Checks if card exists in the current player's hand
+                    if card not in player.hand:
+                        raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
 
-            if not self.game_ended:
-                for round, current_player_idx, score in zip(rounds, start_player_idx, scores):
-                    self.wrap_round(round)
-                    print(round)
-                    cards_played = []  # Cards that are played per round
-                    for card in round:
-                        player = self.players[current_player_idx]
+                    player.played_card(card)
+                    cards_played.append((card, current_player_idx))
 
-                        # Checks if card exists in the current player's hand
-                        if card not in player.hand:
-                            raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
+                    self.screen.fill(BG_COLOR)  # Clear screen with background color
+                    self.render_played_card(cards_played)
+                    self.render_cards()
+                    self.render_scores(current_score)
+                    pygame.display.update()
 
-                        player.played_card(card)
-                        cards_played.append((card, current_player_idx))
+                    current_player_idx = (current_player_idx + 1) % 4
 
-                        self.screen.fill(BG_COLOR)  # Clear screen with background color
-                        self.render_played_card(cards_played)
-                        self.render_cards()
-                        self.render_scores(current_score)
-                        pygame.display.update()
-
-                        current_player_idx = (current_player_idx + 1) % 4
-
-                        clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
-                        player.print_hand()
-                        print()
-                    current_score = score
-                    # self.render_scores(score)
-                    pygame.event.pump()
-                self.game_ended = True
+                    clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
+                current_score = score
+                # self.render_scores(score)
+                pygame.event.pump()
 
             clock.tick(60)  # Cap the frame rate at 60 FPS
+            pygame.quit()
+            self.game_running = False
 
 
     def run_game(self, sun_game: Sun) -> None:
@@ -252,58 +239,47 @@ class Render:
         score = sun_game.score
         self.deal_hands(player_hands) 
         clock = pygame.time.Clock()
-        delay_ms = 1000  # Delay in milliseconds (1000 ms = 1 second)
         
-        running = True
-        while running:
-            # Renders everything for the beginning of the game
-            if self.game_start:
-                self.screen.fill(BG_COLOR)  # Clear screen with background color
-                # self.render_input_box()
-                self.render_cards()
-                self.render_scores(score)
-                pygame.display.update()  # Update the full display Surface to the screen
-                clock.tick(1)
-                self.game_start=False
+        while self.game_running:
+            self.screen.fill(BG_COLOR)  # Clear screen with background color
+            # self.render_input_box()
+            self.render_cards()
+            self.render_scores(score)
+            pygame.display.update()  # Update the full display Surface to the screen
+            clock.tick(1)
+            self.game_start=False
 
-
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
-                    pygame.quit()
-                    sys.exit()
                 
-            if not self.game_ended:
-                for round in range(8):
-                    cards_played = []  # Cards that are played per round
-                    for plays in range(4):
-                        card_idx = int(input(f' Player {current_player_idx}: Enter card index to play: '))
-                        card = player.hand[card_idx]
-                        # Checks if card exists in the current player's hand
-                        if card not in player.hand:
-                            raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
+            
+            for round in range(8):
+                cards_played = []  # Cards that are played per round
+                for plays in range(4):
+                    card_idx = int(input(f' Player {current_player_idx}: Enter card index to play: '))
+                    card = player.hand[card_idx]
+                    # Checks if card exists in the current player's hand
+                    if card not in player.hand:
+                        raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
 
-                        unwrapped_card = self.unwrap_card(card) # Map back to Card
-                        # Play card and append to cards played                        
-                        player.played_card(card)
-                        cards_played.append((card, current_player_idx))
-                        
-                        # Play card in sun game
-                        current_player_idx = sun_game.play(unwrapped_card)
-                        player = self.players[current_player_idx]
+                    unwrapped_card = self.unwrap_card(card) # Map back to Card
+                    # Play card and append to cards played                        
+                    player.played_card(card)
+                    cards_played.append((card, current_player_idx))
+                    
+                    # Play card in sun game
+                    current_player_idx = sun_game.play(unwrapped_card)
+                    player = self.players[current_player_idx]
 
-                        # Render after play
-                        self.screen.fill(BG_COLOR)  # Clear screen with background color
-                        self.render_played_card(cards_played)
-                        self.render_cards()
-                        self.render_scores(score)
-                        pygame.display.update()
+                    # Render after play
+                    self.screen.fill(BG_COLOR)  # Clear screen with background color
+                    self.render_played_card(cards_played)
+                    self.render_cards()
+                    self.render_scores(score)
+                    pygame.display.update()
 
-                        clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
-
-                self.game_ended = True
+                    clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
 
             clock.tick(60)  # Cap the frame rate at 60 FPS
+            self.game_running = False
 
 
 if __name__ == '__main__':

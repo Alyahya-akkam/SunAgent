@@ -1,10 +1,8 @@
-import sys, os
-sys.path.append((os.path.dirname(os.path.abspath('env/card.py'))))
-
-from collections import namedtuple
-from card import *
-from settings import *
 import pygame, random
+from collections import namedtuple
+from env.card import *
+from env.render.settings import *
+
 CardTuple = namedtuple('Card', ['value', 'suit'])
 
 
