@@ -174,7 +174,8 @@ class HistoryWrapper(BaseWrapper):
         self.history = {
             "player_hands": self.env.game.player_hands,
             "players": [0],
-            "rounds": []
+            "rounds": [],
+            "scores": [],
         }
 
     def step(self, action: int) -> None:
@@ -196,4 +197,5 @@ class HistoryWrapper(BaseWrapper):
         # don't add if rounds played is already 8 (the game is over)
         if end_of_round and self.env.game.rounds_played < 8:
             self.history["players"].append(self.agent_selection)
+            self.history["scores"].append(self.env.game.score)
         
