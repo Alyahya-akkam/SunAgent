@@ -1,4 +1,4 @@
-import pygame, sys, random, os
+import pygame, sys, random, os, subprocess
 from env.render.card_wrapper import *
 from env.card import *
 from env.sun import *
@@ -168,7 +168,7 @@ class Render:
         self.display_surface.blit(team2_score_surface, team2_pos)
 
 
-    def visualize(self, game_info: dict):
+    def visualize(self, game_info: dict, record: bool = False):
         """
         game_info (dict): Contains all information about how the game was played
         game_info.rounds (list of lists): Every card played per round in chronological order
@@ -181,6 +181,11 @@ class Render:
         start_player_idx = game_info['players']
         rounds = game_info['rounds']
         scores = game_info['scores']
+
+        if record:
+            if not os.path.exists('frames'):
+                os.makedirs('frames')
+            frame_count = 0
 
         self.deal_hands(player_hands)
         
@@ -195,7 +200,9 @@ class Render:
             clock.tick(1)
             self.game_start = False
 
-
+            if record:
+                pygame.image.save(self.screen, f'frames/frame_{frame_count:04d}.png')
+                frame_count += 1
             for round, current_player_idx, score in zip(rounds, start_player_idx, scores):
                 self.wrap_round(round)
                 cards_played = []  # Cards that are played per round
@@ -214,7 +221,11 @@ class Render:
                     self.render_cards()
                     self.render_scores(current_score)
                     pygame.display.update()
-
+                    
+                    if record: 
+                        # Save the frame
+                        pygame.image.save(self.screen, f'frames/frame_{frame_count:04d}.png')
+                        frame_count += 1
                     current_player_idx = (current_player_idx + 1) % 4
 
                     clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
@@ -226,7 +237,77 @@ class Render:
             pygame.quit()
             self.game_running = False
 
+    # def record_game(self, game_info: dict):
+    #     """
+    #     game_info (dict): Contains all information about how the game was played
+    #     game_info.rounds (list of lists): Every card played per round in chronological order
+    #     game_info.player (list): Player who starts the round
+    #     game_info.player_hands (list of lists): List containing initial hands of all players
+    #     """
 
+    #     current_score = [0, 0]
+    #     player_hands = game_info['player_hands']
+    #     start_player_idx = game_info['players']
+    #     rounds = game_info['rounds']
+    #     scores = game_info['scores']
+
+    #     self.deal_hands(player_hands)
+
+    #     clock = pygame.time.Clock()
+        
+    #     # Create a directory to store frames
+    #     if not os.path.exists('frames'):
+    #         os.makedirs('frames')
+        
+    #     frame_count = 0
+
+    #     while self.game_running:
+    #         self.screen.fill(BG_COLOR)  # Clear screen with background color
+    #         self.render_cards()
+    #         self.render_scores(current_score)
+    #         pygame.display.update()  # Update the full display Surface to the screen
+            
+    #         # Save the frame
+    #         pygame.image.save(self.screen, f'frames/frame_{frame_count:04d}.png')
+    #         frame_count += 1
+            
+    #         clock.tick(1)
+    #         self.game_start = False
+
+    #         for round, current_player_idx, score in zip(rounds, start_player_idx, scores):
+    #             self.wrap_round(round)
+    #             cards_played = []  # Cards that are played per round
+    #             for card in round:
+    #                 player = self.players[current_player_idx]
+
+    #                 # Checks if card exists in the current player's hand
+    #                 if card not in player.hand:
+    #                     raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
+
+    #                 player.played_card(card)
+    #                 cards_played.append((card, current_player_idx))
+
+    #                 self.screen.fill(BG_COLOR)  # Clear screen with background color
+    #                 self.render_played_card(cards_played)
+    #                 self.render_cards()
+    #                 self.render_scores(current_score)
+    #                 pygame.display.update()
+
+    #                 # Save the frame
+    #                 pygame.image.save(self.screen, f'frames/frame_{frame_count:04d}.png')
+    #                 frame_count += 1
+
+    #                 current_player_idx = (current_player_idx + 1) % 4
+
+    #                 clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
+    #             current_score = score
+    #             pygame.event.pump()
+
+    #         clock.tick(60)  # Cap the frame rate at 60 FPS
+    #         pygame.quit()
+    #         self.game_running = False
+
+    #     print(f"Total frames captured: {frame_count}")
     def run_game(self, sun_game: Sun) -> None:
         """
         sun_game (Sun): Sun game that we can interact with
@@ -281,6 +362,42 @@ class Render:
             clock.tick(60)  # Cap the frame rate at 60 FPS
             self.game_running = False
 
+    def create_video(self, frame_rate=1, output_filename="game_recording.mp4"):
+        """
+        Create a video from the saved frames.
+        
+        :param frame_rate: Frames per second for the output video (default: 1)
+        :param output_filename: Name of the output video file (default: "game_recording.mp4")
+        """
+        frames_dir = 'frames'
+        
+        if not os.path.exists(frames_dir):
+            print(f"Error: {frames_dir} directory not found.")
+            return
+        
+        try:
+            ffmpeg_command = [
+                'ffmpeg',
+                '-framerate', str(frame_rate),
+                '-i', f'{frames_dir}/frame_%04d.png',
+                '-c:v', 'libx264',
+                '-pix_fmt', 'yuv420p',
+                output_filename
+            ]
+            
+            subprocess.run(ffmpeg_command, check=True)
+            print(f"Video created successfully: {output_filename}")
+            
+            # Optionally, remove the frames after creating the video
+            for file in os.listdir(frames_dir):
+                os.remove(os.path.join(frames_dir, file))
+            os.rmdir(frames_dir)
+            print("Frames directory cleaned up.")
+            
+        except subprocess.CalledProcessError as e:
+            print(f"Error creating video: {e}")
+        except FileNotFoundError:
+            print("Error: FFmpeg not found. Please ensure FFmpeg is installed and accessible in your system PATH.")
 
 if __name__ == '__main__':
     game = Render()
@@ -291,5 +408,6 @@ if __name__ == '__main__':
         'player_hands': sun_game.player_hands, # The intial hands that were dealth.
         'scores': [[1*i, 2*i] for i in range(1, 9)]
     }
-    game.visualize(game_info)
+    game.visualize(game_info, record=True)
+    game.create_video()
     # game.run_game(sun_game)
