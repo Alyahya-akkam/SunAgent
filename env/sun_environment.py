@@ -43,6 +43,7 @@ class SunEnv(AECEnv):
         self.infos = {agent: {} for agent in self.agents}
 
     def reset(self, seed: int | None = None, options=None) -> None:
+        self.game = Sun(seed=seed)
         self.possible_agents = [0, 1, 2, 3]
         self.agents = [0, 1, 2, 3]
 
@@ -61,8 +62,7 @@ class SunEnv(AECEnv):
 
         # defining stuff to pass tests
         self.infos = {agent: {} for agent in self.agents}
-
-        self.game = Sun(seed)
+        
 
         self.agent_selection = self.game.next_player
 

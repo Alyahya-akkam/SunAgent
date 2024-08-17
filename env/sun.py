@@ -1,10 +1,10 @@
 from .card import *
 import random
+from copy import deepcopy
 # from typing import List, Tuple
 
 ### NOTE: DONT FORGET THE 10 POINTS FOR THE أرض!!!!!!!!!!!!!
-class Sun:
-    deck: list[Card] = [Card(rank, suit) for rank in ranks for suit in suits]
+class Sun:   
     # i don't think there is a better way to do this
     player_hands: list[list[Card]] = [[], [], [], []] # 0 and 2 are a team, 1 and 3 are the other team
     # from now on team 0 (p0 and p2) and team 1 (p1 and p3) will be used
@@ -17,7 +17,12 @@ class Sun:
     # this feels weird, i think it's actually fine, still feels weird
     def __init__(self, seed: int | None =None) -> None:
         """Creates the object and sets-up a new game."""
+        self.deck = self.generate_deck()
         self.new_game(seed)
+
+
+    def generate_deck(self) -> list[Card]:
+        return [Card(rank, suit) for rank in ranks for suit in suits]    
 
     def new_game(self, seed: int | None =None) -> None:
         """
@@ -30,7 +35,7 @@ class Sun:
         # reset score
         self.score = [0, 0]
         # use seed if given
-        if seed:
+        if seed != None:
             random.seed(seed)
         random.shuffle(self.deck)
 
@@ -99,7 +104,6 @@ class Sun:
         """
         # shouldn't be needed since possible_moves() was added, left as a sanity check
         if card not in self.player_hands[self.next_player]:
-            print(self.player_hands[self.next_player])
             raise ValueError(f"Player {self.next_player}, who was expected to play, they do not have the card {card}.")
         
         self.player_hands[self.next_player].remove(card)
