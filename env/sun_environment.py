@@ -172,7 +172,7 @@ class HistoryWrapper(BaseWrapper):
         self.env.reset(seed=seed, options=options)
         
         self.history = {
-            "player_hands": self.env.game.player_hands.copy(),
+            "player_hands": [hand.copy() for hand in self.env.game.player_hands],
             "players": [0],
             "rounds": [],
             "scores": [],
@@ -186,16 +186,16 @@ class HistoryWrapper(BaseWrapper):
         # if this is the last play of the round
         if end_of_round:
             # record the 3 cards played in history (before slef.env.game clears it)
-            self.history["rounds"].append(self.env.game.cards_played.copy())
+            self.history["rounds"].append([card for _, card in self.env.game.cards_played])
             # add the next card played
             self.history["rounds"][-1].append(idx_to_card[action])
         
         # call the original step method
         self.env.step(action)
+        # add the scores
+        self.history["scores"].append(self.env.game.score.copy())
         
         # if the round ended, add the player who plays next to history["players"]
         # don't add if rounds played is already 8 (the game is over)
         if end_of_round and self.env.game.rounds_played < 8:
             self.history["players"].append(self.agent_selection)
-            self.history["scores"].append(self.env.game.score.copy())
-        
