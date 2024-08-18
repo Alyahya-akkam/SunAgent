@@ -192,10 +192,12 @@ class HistoryWrapper(BaseWrapper):
         
         # call the original step method
         self.env.step(action)
-        # add the scores
-        self.history["scores"].append(self.env.game.score.copy())
         
-        # if the round ended, add the player who plays next to history["players"]
-        # don't add if rounds played is already 8 (the game is over)
-        if end_of_round and self.env.game.rounds_played < 8:
-            self.history["players"].append(self.agent_selection)
+        # if the round ended, add the score after the environment updated it
+        if end_of_round:
+            self.history["scores"].append(self.env.game.score.copy())
+
+            # if the round ended, add the player who plays next to history["players"]
+            # don't add if rounds played is already 8 (the game is over, no next player)
+            if self.env.game.rounds_played < 8:
+                self.history["players"].append(self.agent_selection)
