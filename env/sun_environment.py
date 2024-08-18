@@ -113,7 +113,7 @@ class SunEnv(AECEnv):
         # check if this is the last play of the round
         end_of_round = len(self.game.cards_played) == 3
         # check if this is the last play of the game
-        end_of_game = self.game.rounds_played == 7
+        end_of_game = self.game.rounds_played == 7 and end_of_round
         
         if end_of_round:
             # save the prev score for reward calculation
