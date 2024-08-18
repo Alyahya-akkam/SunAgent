@@ -8,8 +8,6 @@ import numpy as np
 from .sun import *
 from .card import *
 
-ROUND_REWARD_COEFF = 0.1
-
 cards: tuple[Card, ...] = tuple([Card(rank, suit) for rank in ranks for suit in suits])
 idx_to_card: dict[int, Card] = dict(zip(range(32), cards))
 card_to_idx: dict[Card, int] = dict(zip(cards, range(32)))
@@ -19,8 +17,11 @@ class SunEnv(AECEnv):
     metadata = {
         "name": "sun_environment_v0",
     }
-    def __init__(self) -> None:
+
+    def __init__(self, round_reward_weight: float = 0.02) -> None:
         super().__init__()
+
+        self.round_reward_weight: float = round_reward_weight
 
         self.possible_agents = [0, 1, 2, 3]
         self.agents = [0, 1, 2, 3]
@@ -111,6 +112,8 @@ class SunEnv(AECEnv):
         
         # check if this is the last play of the round
         end_of_round = len(self.game.cards_played) == 3
+        # check if this is the last play of the game
+        end_of_game = self.game.rounds_played == 7
         
         if end_of_round:
             # save the prev score for reward calculation
@@ -121,14 +124,19 @@ class SunEnv(AECEnv):
         assert chosen_card in self.game.possible_moves()
         self.game.play(chosen_card)
 
+        # else, if the game is over, give each team their final score as a reward
+        if end_of_game:
+            team_0_reward, team_1_reward = self.game.score
+            self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
+            self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
         # if this is the last play of the round, reward agents accordingly
-        if end_of_round:
-            # award the round-winning team their difference in points
+        elif end_of_round:
+            # award the round-winning team their difference in points, weighted
             # the losing team will get a reward of 0
-            team_0_score = self.game.score[0] - prev_score[0]
-            team_1_score = self.game.score[1] - prev_score[1]
-            self.rewards[0], self.rewards[2] = team_0_score, team_0_score
-            self.rewards[1], self.rewards[3] = team_1_score, team_1_score
+            team_0_reward = (self.game.score[0] - prev_score[0]) * self.round_reward_weight
+            team_1_reward = (self.game.score[1] - prev_score[1]) * self.round_reward_weight
+            self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
+            self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
         else: # otherwise, the rewards are 0
             for agent in self.agents:
                 self.rewards[agent] = 0
