@@ -124,17 +124,24 @@ class SunEnv(AECEnv):
         assert chosen_card in self.game.possible_moves()
         self.game.play(chosen_card)
 
-        # else, if the game is over, give each team their final score as a reward
+        # else, if the game is over, give each team the difference in score as a reward
         if end_of_game:
-            team_0_reward, team_1_reward = self.game.score
+            team_0_score, team_1_score = self.game.score
+            
+            team_0_reward = team_0_score - team_1_score
+            team_1_reward = team_1_score - team_0_score
+
             self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
             self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
         # if this is the last play of the round, reward agents accordingly
         elif end_of_round:
-            # award the round-winning team their difference in points, weighted
-            # the losing team will get a reward of 0
-            team_0_reward = (self.game.score[0] - prev_score[0]) * self.round_reward_weight
-            team_1_reward = (self.game.score[1] - prev_score[1]) * self.round_reward_weight
+            # award each team their difference in points positive if they won, negative if they lost, weighted
+            team_0_score = self.game.score[0] - prev_score[0]
+            team_1_score = self.game.score[1] - prev_score[1]
+
+            team_0_reward = (team_0_score - team_1_score) * self.round_reward_weight
+            team_1_reward = (team_1_score - team_0_score) * self.round_reward_weight
+
             self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
             self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
         else: # otherwise, the rewards are 0
