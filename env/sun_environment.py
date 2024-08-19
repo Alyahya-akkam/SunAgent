@@ -23,8 +23,8 @@ class SunEnv(AECEnv):
 
         self.round_reward_weight: float = round_reward_weight
 
-        self.possible_agents = [0, 1, 2, 3]
-        self.agents = [0, 1, 2, 3]
+        self.possible_agents: list[str] = ["0", "1", "2", "3"]
+        self.agents: list[str] = ["0", "1", "2", "3"]
 
         # 5 rows of 32 binary flags
         # 1 row for the agent's current hand
@@ -51,8 +51,8 @@ class SunEnv(AECEnv):
 
     def reset(self, seed: int | None = None, options=None) -> None:
         self.game = Sun(seed=seed)
-        self.possible_agents = [0, 1, 2, 3]
-        self.agents = [0, 1, 2, 3]
+        self.possible_agents: list[str] = ["0", "1", "2", "3"]
+        self.agents: list[str] = ["0", "1", "2", "3"]
 
         self.observation_spaces = {
             agent:Dict(
@@ -73,12 +73,12 @@ class SunEnv(AECEnv):
 
         self.agent_selection = self.game.next_player
 
-        self.rewards = {agent: 0 for agent in self.agents}
-        self._cumulative_rewards = {agent: 0 for agent in self.agents}
-        self.terminations = {agent: False for agent in self.agents}
-        self.truncations = {agent: False for agent in self.agents}
+        self.rewards: dict[str, float] = {agent: 0 for agent in self.agents}
+        self._cumulative_rewards: dict[str, float] = {agent: 0 for agent in self.agents}
+        self.terminations: dict[str, float] = {agent: False for agent in self.agents}
+        self.truncations: dict[str, float] = {agent: False for agent in self.agents}
 
-    def observe(self, agent: int) -> dict[str, np.ndarray]:
+    def observe(self, agent: str) -> dict[str, np.ndarray]:
         # if agent != self.game.next_player:
         #     raise NotImplementedError(f"Agent {agent} is observing, while agent {self.game.next_player} is playing next. \
         #                               Observing for the player that's not playing next is not supported yet.")
@@ -86,7 +86,7 @@ class SunEnv(AECEnv):
         observation = np.zeros((5, 32), dtype="int8")
 
         # set the corresponding flag of every card in the agent's hand to 1
-        for card in self.game.player_hands[agent]:
+        for card in self.game.player_hands[self.agents.index(agent)]:
             observation[0][card_to_idx[card]] = 1
 
         # idk how to explain this, it just works
@@ -142,8 +142,8 @@ class SunEnv(AECEnv):
             team_0_reward = team_0_score - team_1_score
             team_1_reward = team_1_score - team_0_score
 
-            self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
-            self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
+            self.rewards[self.agents[0]], self.rewards[self.agents[2]] = team_0_reward, team_0_reward
+            self.rewards[self.agents[1]], self.rewards[self.agents[3]] = team_1_reward, team_1_reward
         # if this is the last play of the round, reward agents accordingly
         elif end_of_round:
             # award each team their difference in points positive if they won, negative if they lost, weighted
@@ -153,8 +153,8 @@ class SunEnv(AECEnv):
             team_0_reward = (team_0_score - team_1_score) * self.round_reward_weight
             team_1_reward = (team_1_score - team_0_score) * self.round_reward_weight
 
-            self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
-            self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
+            self.rewards[self.agents[0]], self.rewards[self.agents[2]] = team_0_reward, team_0_reward
+            self.rewards[self.agents[1]], self.rewards[self.agents[3]] = team_1_reward, team_1_reward
         else: # otherwise, the rewards are 0
             for agent in self.agents:
                 self.rewards[agent] = 0
@@ -169,10 +169,10 @@ class SunEnv(AECEnv):
         # switch control to the next player
         self.agent_selection = self.game.next_player
 
-    def observation_space(self, agent):
+    def observation_space(self, agent: str):
         return self.observation_spaces[agent]
     
-    def action_space(self, agent):
+    def action_space(self, agent: str):
         return self.action_spaces[agent]
     
     def close(self) -> None:
