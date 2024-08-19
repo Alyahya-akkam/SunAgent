@@ -47,7 +47,7 @@ class SunEnv(AECEnv):
         self.infos = {agent: {} for agent in self.agents}
 
         # cards that have not been played
-        self.in_play: list[Card] = [Card(rank, suit) for rank in ranks for suit in suits]
+        self.not_in_play: list[Card] = []
 
     def reset(self, seed: int | None = None, options=None) -> None:
         self.game = Sun(seed=seed)
@@ -95,7 +95,7 @@ class SunEnv(AECEnv):
             observation[i][card_to_idx[card]] = 1
 
         for i, card in enumerate(cards):
-            if card in self.in_play:
+            if card not in self.not_in_play:
                 observation[4][i] = 1
 
         action_mask = [0]*32
@@ -126,10 +126,10 @@ class SunEnv(AECEnv):
             # save the prev score for reward calculation
             # this works, 0, and 2 will be the first team, 1 and 3 will be the second team
             prev_score = self.game.score.copy()
-            for card in self.game.cards_played:
-                self.in_play.remove(card[1])
+            for _, card in self.game.cards_played:
+                self.not_in_play.append(card)
 
-            self.in_play.remove(idx_to_card[action])
+            self.not_in_play.append(idx_to_card[action])
 
         chosen_card = idx_to_card[action]
         assert chosen_card in self.game.possible_moves()
