@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Self
 
 ranks = ["7", "8", "9", "10", "J", "Q", "K", "A"]
 suits = ["C", "D", "H", "S"]
@@ -42,8 +43,9 @@ class Card:
 
     def __hash__(self):
         return hash((self.rank, self.suit))
+
     # like .equals() in Java
     # needed because (FOR SOME FING REASON) python is saying all objects from this class
     # are equal, (this Fs up checking if a card is present in a list, or removing an Card object from a list)
-    # def __eq__(self, card: Self):
-    #     return self.rank == card.rank and self.suit == card.suit
+    def __eq__(self, card: Self):
+        return self.rank == card.rank and self.suit == card.suit
