@@ -71,7 +71,7 @@ class SunEnv(AECEnv):
         self.infos = {agent: {} for agent in self.agents}
         
 
-        self.agent_selection = self.game.next_player
+        self.agent_selection: str = self.agents[self.game.next_player]
 
         self.rewards: dict[str, float] = {agent: 0 for agent in self.agents}
         self._cumulative_rewards: dict[str, float] = {agent: 0 for agent in self.agents}
@@ -167,7 +167,7 @@ class SunEnv(AECEnv):
                 self.terminations[agent] = True
 
         # switch control to the next player
-        self.agent_selection = self.game.next_player
+        self.agent_selection = self.agents[self.game.next_player]
 
     def observation_space(self, agent: str):
         return self.observation_spaces[agent]
