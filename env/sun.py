@@ -67,9 +67,17 @@ class Sun:
         for player_idx, card in self.cards_played:
             # if the card matches the suit and is the strongest so far
             round_points += card.points
-            if card.suit == first_suit and card.points > strong_card.points:
-                strong_player = player_idx
-                strong_card = card
+            # if one of the cards give points, just compare points
+            if strong_card.points != 0 or card.points != 0:
+                if card.suit == first_suit and card.points > strong_card.points:
+                    strong_player = player_idx
+                    strong_card = card
+            # if both cards don't have points, compare using the rank alone
+            # (THE ONLY cards that have 0 points are number cards (except 10), we can simply compare the int(rank))
+            else:
+                if card.suit == first_suit and int(card.rank) > int(strong_card.rank):
+                    strong_player = player_idx
+                    strong_card = card
         ### END OF MESSY BIT
             
         # if this was the last round, add 10 to the round points.
