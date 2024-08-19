@@ -23,8 +23,8 @@ class SunEnv(AECEnv):
 
         self.round_reward_weight: float = round_reward_weight
 
-        self.possible_agents: list[str] = ["0", "1", "2", "3"]
-        self.agents: list[str] = ["0", "1", "2", "3"]
+        self.possible_agents: list[str] = ["p0", "p1", "p2", "p3"]
+        self.agents: list[str] = ["p0", "p1", "p2", "p3"]
 
         # 5 rows of 32 binary flags
         # 1 row for the agent's current hand
