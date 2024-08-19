@@ -26,13 +26,14 @@ class SunEnv(AECEnv):
         self.possible_agents = [0, 1, 2, 3]
         self.agents = [0, 1, 2, 3]
 
-        # 4 rows of 32 binary flags
+        # 5 rows of 32 binary flags
         # 1 row for the agent's current hand
         # 3 rows for the card played by every other player (all 0s if they did not play yet)
+        # 1 row for the cards that have not been played yet
         self.observation_spaces = {
             agent:Dict(
                 {
-                    "observation":MultiBinary((4, 32)),
+                    "observation":MultiBinary((5, 32)),
                     "action_mask":MultiBinary((32,))
                 }
             )
@@ -45,6 +46,9 @@ class SunEnv(AECEnv):
         # defining stuff to pass tests
         self.infos = {agent: {} for agent in self.agents}
 
+        # cards that have not been played
+        self.in_play: list[Card] = [Card(rank, suit) for rank in ranks for suit in suits]
+
     def reset(self, seed: int | None = None, options=None) -> None:
         self.game = Sun(seed=seed)
         self.possible_agents = [0, 1, 2, 3]
@@ -53,7 +57,7 @@ class SunEnv(AECEnv):
         self.observation_spaces = {
             agent:Dict(
                 {
-                    "observation":MultiBinary((4, 32)),
+                    "observation":MultiBinary((5, 32)),
                     "action_mask":MultiBinary((32,))
                 }
             )
@@ -76,11 +80,10 @@ class SunEnv(AECEnv):
 
     def observe(self, agent: int) -> dict[str, np.ndarray]:
         # if agent != self.game.next_player:
-            
         #     raise NotImplementedError(f"Agent {agent} is observing, while agent {self.game.next_player} is playing next. \
         #                               Observing for the player that's not playing next is not supported yet.")
 
-        observation = np.zeros((4, 32), dtype="int8")
+        observation = np.zeros((5, 32), dtype="int8")
 
         # set the corresponding flag of every card in the agent's hand to 1
         for card in self.game.player_hands[agent]:
@@ -90,6 +93,10 @@ class SunEnv(AECEnv):
         # it sets the corresponding flag 1
         for i, (_, card) in enumerate(self.game.cards_played[-1::-1]):
             observation[i][card_to_idx[card]] = 1
+
+        for i, card in enumerate(cards):
+            if card in self.in_play:
+                observation[5][i] = 1
 
         action_mask = [0]*32
         for card in self.game.possible_moves():
@@ -119,6 +126,10 @@ class SunEnv(AECEnv):
             # save the prev score for reward calculation
             # this works, 0, and 2 will be the first team, 1 and 3 will be the second team
             prev_score = self.game.score.copy()
+            for card in self.game.cards_played:
+                self.in_play.remove(card[1])
+
+            self.in_play.remove(idx_to_card[action])
 
         chosen_card = idx_to_card[action]
         assert chosen_card in self.game.possible_moves()
