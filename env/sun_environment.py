@@ -96,7 +96,7 @@ class SunEnv(AECEnv):
 
         for i, card in enumerate(cards):
             if card in self.in_play:
-                observation[5][i] = 1
+                observation[4][i] = 1
 
         action_mask = [0]*32
         for card in self.game.possible_moves():
