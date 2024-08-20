@@ -237,77 +237,7 @@ class Render:
             pygame.quit()
             self.game_running = False
 
-    # def record_game(self, game_info: dict):
-    #     """
-    #     game_info (dict): Contains all information about how the game was played
-    #     game_info.rounds (list of lists): Every card played per round in chronological order
-    #     game_info.player (list): Player who starts the round
-    #     game_info.player_hands (list of lists): List containing initial hands of all players
-    #     """
-
-    #     current_score = [0, 0]
-    #     player_hands = game_info['player_hands']
-    #     start_player_idx = game_info['players']
-    #     rounds = game_info['rounds']
-    #     scores = game_info['scores']
-
-    #     self.deal_hands(player_hands)
-
-    #     clock = pygame.time.Clock()
-        
-    #     # Create a directory to store frames
-    #     if not os.path.exists('frames'):
-    #         os.makedirs('frames')
-        
-    #     frame_count = 0
-
-    #     while self.game_running:
-    #         self.screen.fill(BG_COLOR)  # Clear screen with background color
-    #         self.render_cards()
-    #         self.render_scores(current_score)
-    #         pygame.display.update()  # Update the full display Surface to the screen
-            
-    #         # Save the frame
-    #         pygame.image.save(self.screen, f'frames/frame_{frame_count:04d}.png')
-    #         frame_count += 1
-            
-    #         clock.tick(1)
-    #         self.game_start = False
-
-    #         for round, current_player_idx, score in zip(rounds, start_player_idx, scores):
-    #             self.wrap_round(round)
-    #             cards_played = []  # Cards that are played per round
-    #             for card in round:
-    #                 player = self.players[current_player_idx]
-
-    #                 # Checks if card exists in the current player's hand
-    #                 if card not in player.hand:
-    #                     raise ValueError(f'Card does not exist in player\'s hand "{card.id}".')
-
-    #                 player.played_card(card)
-    #                 cards_played.append((card, current_player_idx))
-
-    #                 self.screen.fill(BG_COLOR)  # Clear screen with background color
-    #                 self.render_played_card(cards_played)
-    #                 self.render_cards()
-    #                 self.render_scores(current_score)
-    #                 pygame.display.update()
-
-    #                 # Save the frame
-    #                 pygame.image.save(self.screen, f'frames/frame_{frame_count:04d}.png')
-    #                 frame_count += 1
-
-    #                 current_player_idx = (current_player_idx + 1) % 4
-
-    #                 clock.tick(1)  # Wait for 1 second (adjust based on desired delay)
-    #             current_score = score
-    #             pygame.event.pump()
-
-    #         clock.tick(60)  # Cap the frame rate at 60 FPS
-    #         pygame.quit()
-    #         self.game_running = False
-
-    #     print(f"Total frames captured: {frame_count}")
+    
     def run_game(self, sun_game: Sun) -> None:
         """
         sun_game (Sun): Sun game that we can interact with
@@ -361,7 +291,10 @@ class Render:
 
             clock.tick(60)  # Cap the frame rate at 60 FPS
             self.game_running = False
+            self.render_scores(score)
+            pygame.display.update()  
 
+            
     def create_video(self, frame_rate=1, output_filename="game_recording.mp4"):
         """
         Create a video from the saved frames.

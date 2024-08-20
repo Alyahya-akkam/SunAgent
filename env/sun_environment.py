@@ -20,7 +20,7 @@ class SunEnv(AECEnv):
 
     def __init__(self, round_reward_weight: float = 0.02) -> None:
         super().__init__()
-
+        self.points_lost = [0, 0]
         self.round_reward_weight: float = round_reward_weight
 
         self.possible_agents = [0, 1, 2, 3]
@@ -51,6 +51,7 @@ class SunEnv(AECEnv):
 
     def reset(self, seed: int | None = None, options=None) -> None:
         self.game = Sun(seed=seed)
+        self.rounds_played = []
         self.possible_agents = [0, 1, 2, 3]
         self.agents = [0, 1, 2, 3]
 
@@ -134,27 +135,41 @@ class SunEnv(AECEnv):
         chosen_card = idx_to_card[action]
         assert chosen_card in self.game.possible_moves()
         self.game.play(chosen_card)
-
+        self.rounds_played
         # else, if the game is over, give each team the difference in score as a reward
         if end_of_game:
             team_0_score, team_1_score = self.game.score
             
-            team_0_reward = team_0_score - team_1_score
-            team_1_reward = team_1_score - team_0_score
+            team_0_reward = team_0_score - self.points_lost[0]**2
+            team_1_reward = team_1_score - self.points_lost[1]**2
 
             self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
             self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
         # if this is the last play of the round, reward agents accordingly
         elif end_of_round:
             # award each team their difference in points positive if they won, negative if they lost, weighted
+
             team_0_score = self.game.score[0] - prev_score[0]
             team_1_score = self.game.score[1] - prev_score[1]
 
-            team_0_reward = (team_0_score - team_1_score) * self.round_reward_weight
-            team_1_reward = (team_1_score - team_0_score) * self.round_reward_weight
+            if team_0_score > 0:
+              points_lost = sum([card.points for card in self.game.cards_played if card[0] in [1, 3]])
+              self.points_lost[1] += points_lost
+              team_0_score = team_0_score
+              team_1_score = -points_lost
+            else:
+              points_lost = sum([card.points for card in self.game.cards_played if card[0] in [0, 2]])
+              self.points_lost[0] += points_lost
+              team_1_score = team_1_score
+              team_0_score = -points_lost
+
+            
+            team_0_reward =  team_0_score* self.round_reward_weight
+            team_1_reward =  team_1_score* self.round_reward_weight
 
             self.rewards[0], self.rewards[2] = team_0_reward, team_0_reward
             self.rewards[1], self.rewards[3] = team_1_reward, team_1_reward
+            self.points_lost = [0, 0]
         else: # otherwise, the rewards are 0
             for agent in self.agents:
                 self.rewards[agent] = 0
