@@ -235,6 +235,8 @@ class Render:
 
             clock.tick(60)  # Cap the frame rate at 60 FPS
             pygame.quit()
+            self.render_scores(score)
+            pygame.display.update()  
             self.game_running = False
 
     
@@ -294,7 +296,7 @@ class Render:
             self.render_scores(score)
             pygame.display.update()  
 
-            
+
     def create_video(self, frame_rate=1, output_filename="game_recording.mp4"):
         """
         Create a video from the saved frames.
